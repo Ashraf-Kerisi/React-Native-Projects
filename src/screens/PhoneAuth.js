@@ -19,17 +19,17 @@ import { db } from '../../config';
 import { ref, onValue } from 'firebase/database';
 
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDJi-cMAJ7Eo2qW4athusz-xusyXlWGK6E",
-  authDomain: "mytutor-616e6.firebaseapp.com",
-  databaseURL: "https://mytutor-616e6-default-rtdb.firebaseio.com/",
-  projectId: "mytutor-616e6",
-  storageBucket: "mytutor-616e6.appspot.com",
-  messagingSenderId: "342072652782",
-  appId: "1:342072652782:web:894d88792b2f76ee01d4ff"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDAOqBcBeSkLIEtCQhs7Af-o-Odlaux5oU",
+//   authDomain: "mytutor-472dd.firebaseapp.com",
+//   databaseURL: "https://mytutor-472dd-default-rtdb.asia-southeast1.firebasedatabase.app",
+//   projectId: "mytutor-472dd",
+//   storageBucket: "mytutor-472dd.appspot.com",
+//   messagingSenderId: "512487268953",
+//   appId: "1:512487268953:web:5d76944e4aeca69c500748"
+// };
 
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 
 import { AppStyles } from '../AppStyles';
 
@@ -41,7 +41,6 @@ function LoginScreen({ navigation }) {
 
   const [verificationId, setVerificationId] = useState(null);
   const [verificationCode, setVerificationCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState(null);
   const [verificationInProgress, setVerificationInProgress] = useState(false);
 
@@ -59,22 +58,23 @@ function LoginScreen({ navigation }) {
   }
 
   const sendVerificationCode = async () => {
-    try {
-      const phoneProvider = new firebase.auth.PhoneAuthProvider();
-      const verificationId = await phoneProvider.verifyPhoneNumber(
-        phoneNumber,
-        recaptchaVerifier.current
-      );
-      setVerificationId(verificationId);
-      setVerificationInProgress(true);
-    } catch (err) {
-      setVerificationError(err);
-      setVerificationInProgress(false);
-    }
+    navigation.navigate('Home')
+    // try {
+    //   const phoneProvider = new firebase.auth.PhoneAuthProvider();
+    //   const verificationId = await phoneProvider.verifyPhoneNumber(
+    //     phoneNumber,
+    //     recaptchaVerifier.current
+    //   );
+    //   setVerificationId(verificationId);
+    //   setVerificationInProgress(true);
+    // } catch (err) {
+    //   setVerificationError(err);
+    //   setVerificationInProgress(false);
+    // }
   };
 
   const verifyCode = async () => {
-    setVerifying(true)
+   
     try {
       const credential = firebase.auth.PhoneAuthProvider.credential(
         verificationId,
@@ -82,11 +82,9 @@ function LoginScreen({ navigation }) {
       );
       await firebase.auth().signInWithCredential(credential);
       console.log('Successfully authenticated');
-
     } catch (err) {
       setVerificationError(err);
     }
-    setVerifying(false)
   };
 
 
@@ -131,9 +129,9 @@ function LoginScreen({ navigation }) {
           defaultValue={phoneNumber}
           defaultCode="PK"
           layout="first"
-          containerStyle={{ width: '100%', height: 50, backgroundColor: 'transparent' }}
-          textContainerStyle={{ borderRadius: 50 }}
-          textInputStyle={{ height: 50, }}
+          containerStyle={{ width:'100%', height:50,backgroundColor:'transparent'}}
+          textContainerStyle={{borderRadius:50}}
+          textInputStyle={{height:50,}}
           onChangeText={(text) => {
             setPhoneNumber(text);
           }}
@@ -153,7 +151,7 @@ function LoginScreen({ navigation }) {
         <Text style={styles.loginText}>Log in</Text>
       </TouchableOpacity>
 
-
+  
       {verificationInProgress && (
         <Text>Sending verification code...</Text>
       )}
@@ -163,18 +161,16 @@ function LoginScreen({ navigation }) {
       {verificationId && (
         <>
           <View style={styles.InputContainer}>
-            <TextInput
-              style={styles.body}
-              placeholder="Verification code"
-              value={verificationCode}
-              onChangeText={setVerificationCode}
-            />
-          </View>
-          <TouchableOpacity
-            disabled={verifying}
-            style={styles.loginContainer} onPress={() => verifyCode()} >
-            <Text style={styles.loginText}>{verifying ? 'Verifying, please wait...' : 'Verify Code'}</Text>
-          </TouchableOpacity>
+          <TextInput
+            style={styles.body}
+            placeholder="Verification code"
+            value={verificationCode}
+            onChangeText={setVerificationCode}
+          />
+</View>
+          <TouchableOpacity style={styles.loginContainer}  onPress={() => verifyCode()} >
+          <Text style={styles.loginText}>Verify Code</Text>
+            </TouchableOpacity>
         </>
       )}
 

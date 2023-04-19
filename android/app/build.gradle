@@ -93,9 +93,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.bloodbank"
+    namespace "com.MyTutor"
     defaultConfig {
-        applicationId "com.bloodbank"
+        applicationId "com.MyTutor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,85 +1,155 @@
-import React, {useState} from 'react';
-import {Alert, StyleSheet, Text, TextInput, View, TouchableOpacity} from 'react-native';
+'use strict';
+
+import React, { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
+import {useValidation}  from 'react-native-form-validator';
+import { RadioButton } from 'react-native-paper';
+import PhoneInput from "react-native-phone-number-input";
+
+import {db} from '../../config';
+import {ref,set, onValue} from 'firebase/database';
 // import Button from 'react-native-button';
-import {AppStyles} from '../AppStyles';
+import { AppStyles } from '../AppStyles';
 
 
-function SignupScreen({navigation}) {
+function SignupScreen({ navigation }, props) {
   const [fullname, setFullname] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [phoneInput, setPhoneInput] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email,setEmail]=useState('');
+  const [checked, setChecked] = useState('student');
+  const [userExists, setUserExists] = useState(false);
+  const [accountCreated,setAccountCreated]=useState(false);
+
+  const { validate, isFieldInError, getErrorsInField, getErrorMessages } =
+    useValidation({
+      state: { fullname, phoneNumber,email, password, confirmPassword },
+    });
+  
 
 
-  const onRegister = () => {
-    alert('No Database Connected!')
-    // auth()
-    //   .createUserWithEmailAndPassword(email, password)
-    //   .then((response) => {
-    //     const data = {
-    //       email: email,
-    //       fullname: fullname,
-    //       phone: phone,
-    //       appIdentifier: 'rn-android-universal-listings',
-    //     };
-    //     const user_uid = response.user._user.uid;
-    //     firestore().collection('users').doc(user_uid).set(data);
-    //     firestore()
-    //       .collection('users')
-    //       .doc(user_uid)
-    //       .get()
-    //       .then(function (user) {
-    //         dispatch(login(user.data()));
-    //         navigation.navigate('DrawerStack', {user});
-    //       })
-    //       .catch(function (error) {
-    //         const {code, message} = error;
-    //         Alert.alert(message);
-    //       });
-    //   })
-    //   .catch((error) => {
-    //     const {code, message} = error;
-    //     Alert.alert(message);
-    //   });
+  const onRegister = async () => {
+    if(
+    await validate({
+      fullname: { required: true },
+      password: { required: true },
+      phoneNumber:{required:true, minlength: 13, maxlength: 13, },
+      email:{required:true,email: true},
+      confirmPassword: { required: true, equalPassword: password }
+    })
+    ){
+
+    //check for already existance of the user
+    const dbRef = ref(db,`users/${phoneNumber}`);
+   
+    onValue(dbRef, snapshot => {
+      if (snapshot.exists()) {
+        setUserExists(true)
+        setAccountCreated(false)
+      }else{
+        //add new user to firebase
+        set(dbRef,{
+          fullname:fullname,
+          phone:phoneNumber,
+          email:email,
+          password:password,
+          role:checked
+        })
+        setAccountCreated(true)
+        setUserExists(false)
+      }
+    });
+  }else{
+    //alert('something went wrong')
+  }
+
   };
 
   return (
     <View style={styles.container}>
+      
+      {accountCreated?
+      <View style={{width:'80%'}}>
+        <Text style={[styles.title, styles.leftTitle,{color:"green"}]}>Account created successfully! </Text>
+        <TouchableOpacity
+           style={[styles.facebookContainer,{width:'100%', borderWidth:1}]}
+        onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.facebookText}> Login </Text>
+      </TouchableOpacity>     
+      </View>:    
+      <View style={[styles.container, {width:'100%'}]}>
       <Text style={[styles.title, styles.leftTitle]}>Create new account</Text>
+      <View style={[{ flexDirection: 'row',    alignItems: 'center',    justifyContent: 'center'}]}>
+        <RadioButton.Group onValueChange={value => setChecked(value)} value={checked}>
+          <View style={styles.radioButton}>
+            
+            <RadioButton value="student" /><Text style={{color:'black', marginRight:30}}>Student</Text>
+         
+           
+            <RadioButton value="tutor" /><Text style={{color:'black'}}>Tutor</Text>
+          </View>
+        </RadioButton.Group>
+      </View>
       <View style={styles.InputContainer}>
         <TextInput
           style={styles.body}
-          placeholder="Full Name"
+          placeholder="Full Name *"
           onChangeText={setFullname}
           value={fullname}
           placeholderTextColor={AppStyles.color.grey}
           underlineColorAndroid="transparent"
         />
       </View>
+      {isFieldInError('fullname') &&
+        getErrorsInField('fullname').map(errorMessage => (
+          <Text style={styles.error}>{errorMessage}</Text>
+        ))}
       <View style={styles.InputContainer}>
-        <TextInput
-          style={styles.body}
-          placeholder="Phone Number"
-          onChangeText={setPhone}
-          value={phone}
-          placeholderTextColor={AppStyles.color.grey}
-          underlineColorAndroid="transparent"
+        <PhoneInput
+          ref={phoneInput}
+          defaultValue={phoneNumber}
+          defaultCode="PK"
+          layout="first"
+          containerStyle={{ width:'100%', height:50,backgroundColor:'transparent'}}
+          textContainerStyle={{borderRadius:50}}
+          textInputStyle={{height:50,}}
+          onChangeText={(text) => {
+            setPhoneNumber(text);
+          }}
+          onChangeFormattedText={(text) => {
+            setPhoneNumber(text);
+          }}
+        
         />
       </View>
-      <View style={styles.InputContainer}>
+      {
+        userExists&&
+        <Text style={styles.error}>Already exists!</Text>
+      }
+      {isFieldInError('phoneNumber') &&
+        getErrorsInField('phoneNumber').map(errorMessage => (
+          <Text style={styles.error}>{errorMessage}</Text>
+        ))}
+         <View style={styles.InputContainer}>
         <TextInput
           style={styles.body}
-          placeholder="E-mail Address"
+          placeholder="Enter Email *"
           onChangeText={setEmail}
           value={email}
           placeholderTextColor={AppStyles.color.grey}
           underlineColorAndroid="transparent"
         />
       </View>
+      {isFieldInError('email') &&
+        getErrorsInField('email').map(errorMessage => (
+          <Text style={styles.error}>{errorMessage}</Text>
+        ))}
       <View style={styles.InputContainer}>
         <TextInput
           style={styles.body}
-          placeholder="Password"
+          placeholder="Password *"
           secureTextEntry={true}
           onChangeText={setPassword}
           value={password}
@@ -87,11 +157,33 @@ function SignupScreen({navigation}) {
           underlineColorAndroid="transparent"
         />
       </View>
+      {isFieldInError('password') &&
+        getErrorsInField('password').map(errorMessage => (
+          <Text style={styles.error}>{errorMessage}</Text>
+        ))}
+      <View style={styles.InputContainer}>
+        <TextInput
+          style={styles.body}
+          placeholder="Confirm Password *"
+          secureTextEntry={true}
+          onChangeText={setConfirmPassword}
+          value={confirmPassword}
+          placeholderTextColor={AppStyles.color.grey}
+          underlineColorAndroid="transparent"
+        />
+      </View>
+      {isFieldInError('confirmPassword') &&
+        getErrorsInField('confirmPassword').map(errorMessage => (
+          <Text style={styles.error}>{errorMessage}</Text>
+        ))}
+
       <TouchableOpacity
-        style={[styles.facebookContainer, {marginTop: 50}]}
+        style={[styles.facebookContainer, { marginTop: 50 }]}
         onPress={() => onRegister()}>
         <Text style={styles.facebookText}>Sign Up</Text>
       </TouchableOpacity>
+      </View>
+      }
     </View>
   );
 }
@@ -157,6 +249,16 @@ const styles = StyleSheet.create({
   },
   facebookText: {
     color: AppStyles.color.white,
+  },
+  error: {
+    color: 'red',
+    fontSize: 11
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+
   },
 });
 

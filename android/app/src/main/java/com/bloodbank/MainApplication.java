@@ -1,4 +1,4 @@
-package com.bloodbank;
+package com.MyTutor;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

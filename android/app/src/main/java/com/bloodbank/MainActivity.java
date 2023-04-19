@@ -1,4 +1,4 @@
-package com.bloodbank;
+package com.MyTutor;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -13,7 +13,7 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "BloodBank";
+    return "MyTutor";
   }
 
   /**
